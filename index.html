@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>אודות | השם שלך</title>
+    <style>
+        /* עיצוב כללי */
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f7f6;
+            color: #333;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #fff;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            border-radius: 10px;
+        }
+
+        /* חלק עליון - תמונה וכותרת */
+        .profile-header {
+            text-align: center;
+            padding-bottom: 30px;
+            border-bottom: 2px solid #eee;
+        }
+
+        .profile-img {
+            width: 150px;
+            height: 150px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 4px solid #007bff;
+            margin-bottom: 15px;
+        }
+
+        h1 {
+            margin: 0;
+            color: #2c3e50;
+        }
+
+        .subtitle {
+            color: #7f8c8d;
+            font-size: 1.1em;
+        }
+
+        /* תוכן העמוד */
+        .content {
+            padding: 20px 0;
+        }
+
+        h2 {
+            color: #007bff;
+            border-right: 4px solid #007bff;
+            padding-right: 10px;
+        }
+
+        .skills {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            list-style: none;
+            padding: 0;
+        }
+
+        .skills li {
+            background: #e1f5fe;
+            color: #0277bd;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 0.9em;
+            font-weight: bold;
+        }
+
+        /* כפתור ליצירת קשר */
+        .contact-btn {
+            display: inline-block;
+            margin-top: 20px;
+            padding: 10px 25px;
+            background-color: #007bff;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+            transition: background 0.3s;
+        }
+
+        .contact-btn:hover {
+            background-color: #0056b3;
+        }
+
+        /* התאמה לנייד */
+        @media (max-width: 600px) {
+            .container {
+                margin: 20px;
+                padding: 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header class="profile-header">
+        <img src="https://via.placeholder.com/150" alt="התמונה שלי" class="profile-img">
+        <h1>שלום, אני [השם שלך]</h1>
+        <p class="subtitle">[הגדרת התפקיד שלך - למשל: מפתח אתרים / מעצב / יזם]</p>
+    </header>
+
+    <main class="content">
+        <section>
+            <h2>קצת עלי</h2>
+            <p>
+                כאן כדאי לכתוב פסקה קצרה על מי אתם. מה אתם עושים, מה מניע אתכם ומה הניסיון שלכם. 
+                נסו לשמור על טון אישי ומקצועי בו זמנית.
+            </p>
+            <p>
+                אני מאמין ב... (ערך שחשוב לך) ונהנה לעזור ללקוחות שלי להשיג את המטרות שלהם דרך... (הפתרון שאתה מציע).
+            </p>
+        </section>
+
+        <section>
+            <h2>מה אני עושה?</h2>
+            <ul class="skills">
+                <li>פיתוח HTML/CSS</li>
+                <li>עיצוב חווית משתמש</li>
+                <li>ניהול פרויקטים</li>
+                <li>כתיבת תוכן</li>
+                <li>ייעוץ עסקי</li>
+            </ul>
+        </section>
+    </main>
+
+    <footer style="text-align: center;">
+        <a href="mailto:your@email.com" class="contact-btn">דברו איתי</a>
+    </footer>
+</div>
+
+</body>
+</html>
