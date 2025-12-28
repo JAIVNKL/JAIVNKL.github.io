@@ -1,0 +1,845 @@
+<!DOCTYPE html>
+<html dir="rtl" lang="he">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>פרודו - Liar's Dice</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Rubik:wght@400;500;700&display=swap');
+        body { font-family: 'Rubik', sans-serif; }
+        
+        .dice {
+            width: 64px;
+            height: 64px;
+            background: white;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            position: relative;
+        }
+        
+        .dice-dot {
+            width: 10px;
+            height: 10px;
+            background: #1e40af;
+            border-radius: 50%;
+            position: absolute;
+        }
+        
+        .dice-parrot {
+            font-size: 40px;
+        }
+        
+        /* Dice 2 */
+        .dice-2 .dot-1 { top: 15px; left: 15px; }
+        .dice-2 .dot-2 { bottom: 15px; right: 15px; }
+        
+        /* Dice 3 */
+        .dice-3 .dot-1 { top: 15px; left: 15px; }
+        .dice-3 .dot-2 { top: 50%; left: 50%; transform: translate(-50%, -50%); }
+        .dice-3 .dot-3 { bottom: 15px; right: 15px; }
+        
+        /* Dice 4 */
+        .dice-4 .dot-1 { top: 15px; left: 15px; }
+        .dice-4 .dot-2 { top: 15px; right: 15px; }
+        .dice-4 .dot-3 { bottom: 15px; left: 15px; }
+        .dice-4 .dot-4 { bottom: 15px; right: 15px; }
+        
+        /* Dice 5 */
+        .dice-5 .dot-1 { top: 15px; left: 15px; }
+        .dice-5 .dot-2 { top: 15px; right: 15px; }
+        .dice-5 .dot-3 { top: 50%; left: 50%; transform: translate(-50%, -50%); }
+        .dice-5 .dot-4 { bottom: 15px; left: 15px; }
+        .dice-5 .dot-5 { bottom: 15px; right: 15px; }
+        
+        /* Dice 6 */
+        .dice-6 .dot-1 { top: 15px; left: 15px; }
+        .dice-6 .dot-2 { top: 15px; right: 15px; }
+        .dice-6 .dot-3 { top: 50%; left: 15px; transform: translateY(-50%); }
+        .dice-6 .dot-4 { top: 50%; right: 15px; transform: translateY(-50%); }
+        .dice-6 .dot-5 { bottom: 15px; left: 15px; }
+        .dice-6 .dot-6 { bottom: 15px; right: 15px; }
+        
+        .dice-small {
+            width: 40px;
+            height: 40px;
+        }
+        
+        .dice-small .dice-dot {
+            width: 6px;
+            height: 6px;
+        }
+        
+        .dice-small .dice-parrot {
+            font-size: 24px;
+        }
+        
+        .dice-small.dice-2 .dot-1 { top: 8px; left: 8px; }
+        .dice-small.dice-2 .dot-2 { bottom: 8px; right: 8px; }
+        .dice-small.dice-3 .dot-1 { top: 8px; left: 8px; }
+        .dice-small.dice-3 .dot-3 { bottom: 8px; right: 8px; }
+        .dice-small.dice-4 .dot-1 { top: 8px; left: 8px; }
+        .dice-small.dice-4 .dot-2 { top: 8px; right: 8px; }
+        .dice-small.dice-4 .dot-3 { bottom: 8px; left: 8px; }
+        .dice-small.dice-4 .dot-4 { bottom: 8px; right: 8px; }
+        .dice-small.dice-5 .dot-1 { top: 8px; left: 8px; }
+        .dice-small.dice-5 .dot-2 { top: 8px; right: 8px; }
+        .dice-small.dice-5 .dot-4 { bottom: 8px; left: 8px; }
+        .dice-small.dice-5 .dot-5 { bottom: 8px; right: 8px; }
+        .dice-small.dice-6 .dot-1 { top: 8px; left: 8px; }
+        .dice-small.dice-6 .dot-2 { top: 8px; right: 8px; }
+        .dice-small.dice-6 .dot-3 { top: 50%; left: 8px; transform: translateY(-50%); }
+        .dice-small.dice-6 .dot-4 { top: 50%; right: 8px; transform: translateY(-50%); }
+        .dice-small.dice-6 .dot-5 { bottom: 8px; left: 8px; }
+        .dice-small.dice-6 .dot-6 { bottom: 8px; right: 8px; }
+    </style>
+</head>
+<body class="min-h-screen">
+    <div id="app"></div>
+
+    <script>
+        const state = {
+            gameState: 'menu',
+            players: [],
+            currentPlayerIndex: 0,
+            currentBid: null,
+            bidQuantity: 1,
+            bidValue: 2,
+            message: '',
+            showAllDice: false,
+            round: 1,
+            difficulty: 'medium',
+            numBots: 2,
+            waitingForConfirm: false,
+            perudoResult: null,
+            isPalificoMode: false
+        };
+
+        const botNames = ['רובוט-3000', 'דייס-מאסטר', 'בלף-בוט', 'קוביה-קינג', 'פרודו-פרו'];
+
+        function rollDice(count) {
+            return Array.from({ length: count }, () => Math.floor(Math.random() * 6) + 1);
+        }
+
+        function getDiceEmoji(value) {
+            if (value === 1) {
+                return '<div class="dice-parrot">🦜</div>';
+            }
+            
+            const dots = Array.from({length: value}, (_, i) => 
+                `<div class="dice-dot dot-${i + 1}"></div>`
+            ).join('');
+            
+            return dots;
+        }
+        
+        function renderDice(value, size = 'normal') {
+            const sizeClass = size === 'small' ? 'dice-small' : '';
+            if (value === 1) {
+                return `<div class="dice ${sizeClass}"><div class="dice-parrot">🦜</div></div>`;
+            }
+            return `<div class="dice dice-${value} ${sizeClass}">${getDiceEmoji(value)}</div>`;
+        }
+
+        function getPlayerColor(playerId) {
+            if (playerId === 'player') return 'blue';
+            const colors = ['red', 'green', 'purple', 'orange', 'pink'];
+            const botIndex = parseInt(playerId.replace('bot', ''));
+            return colors[botIndex % colors.length];
+        }
+
+        function startGame(difficulty, numBots) {
+            state.difficulty = difficulty;
+            state.numBots = numBots;
+            
+            const newPlayers = [{
+                id: 'player',
+                name: 'אתה',
+                isBot: false,
+                diceCount: 5,
+                dice: rollDice(5),
+                isAlive: true
+            }];
+            
+            for (let i = 0; i < numBots; i++) {
+                newPlayers.push({
+                    id: `bot${i}`,
+                    name: botNames[i],
+                    isBot: true,
+                    diceCount: 5,
+                    dice: rollDice(5),
+                    isAlive: true
+                });
+            }
+            
+            state.players = newPlayers;
+            state.currentPlayerIndex = 0;
+            state.currentBid = null;
+            state.bidQuantity = 1;
+            state.bidValue = 2;
+            state.showAllDice = false;
+            state.round = 1;
+            state.gameState = 'playing';
+            state.message = 'התור שלך! הצע הצעה או קרא "פרודו"';
+            state.waitingForConfirm = false;
+            state.perudoResult = null;
+            state.isPalificoMode = false;
+            
+            render();
+        }
+
+        function getNextPlayerIndex(currentIndex) {
+            let nextIndex = (currentIndex + 1) % state.players.length;
+            while (!state.players[nextIndex].isAlive) {
+                nextIndex = (nextIndex + 1) % state.players.length;
+            }
+            return nextIndex;
+        }
+
+        function makeBid() {
+            if (!state.currentBid) {
+                state.currentBid = { 
+                    quantity: state.bidQuantity, 
+                    value: state.bidValue, 
+                    playerIndex: state.currentPlayerIndex, 
+                    isPalafico: state.isPalificoMode 
+                };
+                state.message = `${state.players[state.currentPlayerIndex].name} הצע${state.isPalificoMode ? ' (פאליפיקו)' : ''}: ${state.bidQuantity} קוביות של ${state.bidValue}`;
+                state.currentPlayerIndex = getNextPlayerIndex(state.currentPlayerIndex);
+                render();
+                setTimeout(botTurnIfNeeded, 1500);
+                return;
+            }
+
+            let isValidBid = false;
+            
+            if (state.currentBid.isPalafico && !state.isPalificoMode) {
+                const minQuantity = (state.currentBid.quantity * 2) - 1;
+                isValidBid = state.bidQuantity >= minQuantity;
+                if (!isValidBid) {
+                    state.message = `לעבור מפאליפיקו לרגיל צריך לפחות ${minQuantity} קוביות!`;
+                    render();
+                    return;
+                }
+            } else if (!state.currentBid.isPalafico && state.isPalificoMode) {
+                const maxQuantity = Math.ceil(state.currentBid.quantity / 2);
+                isValidBid = state.bidQuantity <= maxQuantity && state.bidQuantity >= 1;
+                if (!isValidBid) {
+                    state.message = `לעבור לפאליפיקו מותר עד ${maxQuantity} קוביות!`;
+                    render();
+                    return;
+                }
+            } else {
+                isValidBid = state.bidQuantity > state.currentBid.quantity || 
+                           (state.bidQuantity === state.currentBid.quantity && state.bidValue > state.currentBid.value);
+                if (!isValidBid) {
+                    state.message = 'ההצעה חייבת להיות גבוהה יותר!';
+                    render();
+                    return;
+                }
+            }
+            
+            state.currentBid = { 
+                quantity: state.bidQuantity, 
+                value: state.bidValue, 
+                playerIndex: state.currentPlayerIndex, 
+                isPalafico: state.isPalificoMode 
+            };
+            state.message = `${state.players[state.currentPlayerIndex].name} הצע${state.isPalificoMode ? ' (פאליפיקו)' : ''}: ${state.bidQuantity} קוביות של ${state.bidValue}`;
+            state.currentPlayerIndex = getNextPlayerIndex(state.currentPlayerIndex);
+            render();
+            setTimeout(botTurnIfNeeded, 1500);
+        }
+
+        function botTurnIfNeeded() {
+            if (state.gameState === 'playing' && state.players[state.currentPlayerIndex]?.isBot && !state.showAllDice && !state.waitingForConfirm) {
+                botTurn();
+            }
+        }
+
+        function botTurn() {
+            const currentBot = state.players[state.currentPlayerIndex];
+            const totalDice = state.players.filter(p => p.isAlive).reduce((sum, p) => sum + p.diceCount, 0);
+            const allDice = state.players.filter(p => p.isAlive).flatMap(p => p.dice);
+            
+            if (!state.currentBid) {
+                const botDiceValues = currentBot.dice.filter(d => d !== 1);
+                const commonValue = botDiceValues.length > 0 ? 
+                    botDiceValues.sort((a, b) => 
+                        botDiceValues.filter(v => v === b).length - botDiceValues.filter(v => v === a).length
+                    )[0] : 2;
+                
+                const count = currentBot.dice.filter(d => d === commonValue || d === 1).length;
+                state.currentBid = { quantity: Math.max(1, count), value: commonValue, playerIndex: state.currentPlayerIndex, isPalafico: false };
+                state.bidQuantity = Math.max(1, count);
+                state.bidValue = commonValue;
+                state.message = `${currentBot.name} הציע: ${Math.max(1, count)} קוביות של ${commonValue}`;
+                state.currentPlayerIndex = getNextPlayerIndex(state.currentPlayerIndex);
+                render();
+                setTimeout(botTurnIfNeeded, 1500);
+                return;
+            }
+            
+            const actualCount = state.currentBid.isPalafico 
+                ? allDice.filter(d => d === state.currentBid.value).length
+                : allDice.filter(d => d === state.currentBid.value || d === 1).length;
+            
+            let shouldChallenge = false;
+            let shouldCallSpot = false;
+            
+            if (actualCount === state.currentBid.quantity && Math.random() > 0.7) {
+                shouldCallSpot = true;
+            }
+            
+            if (state.difficulty === 'easy') {
+                shouldChallenge = Math.random() > 0.65 && state.currentBid.quantity > totalDice * 0.45;
+            } else if (state.difficulty === 'medium') {
+                const expectedCount = state.currentBid.isPalafico ? totalDice / 6 : totalDice / 3;
+                shouldChallenge = Math.random() > 0.5 && state.currentBid.quantity > expectedCount * 1.5;
+            } else {
+                const knownCount = state.currentBid.isPalafico 
+                    ? currentBot.dice.filter(d => d === state.currentBid.value).length
+                    : currentBot.dice.filter(d => d === state.currentBid.value || d === 1).length;
+                const unknownDice = totalDice - currentBot.diceCount;
+                const expectedFromOthers = state.currentBid.isPalafico ? unknownDice / 6 : unknownDice / 3;
+                shouldChallenge = Math.random() > 0.4 && state.currentBid.quantity > knownCount + expectedFromOthers + 1.5;
+            }
+
+            if (shouldCallSpot) {
+                callSpotOn();
+            } else if (shouldChallenge && state.currentBid.quantity >= 3) {
+                callPerudo();
+            } else {
+                const switchToPalafico = !state.currentBid.isPalafico && Math.random() > 0.85 && state.currentBid.quantity >= 4;
+                
+                if (switchToPalafico) {
+                    const maxQuantity = Math.ceil(state.currentBid.quantity / 2);
+                    const newQuantity = Math.max(1, maxQuantity);
+                    const botCount = currentBot.dice.filter(d => d === state.currentBid.value).length;
+                    const finalQuantity = Math.max(newQuantity, Math.min(botCount, maxQuantity));
+                    
+                    state.currentBid = { quantity: finalQuantity, value: state.currentBid.value, playerIndex: state.currentPlayerIndex, isPalafico: true };
+                    state.bidQuantity = finalQuantity;
+                    state.bidValue = state.currentBid.value;
+                    state.isPalificoMode = true;
+                    state.message = `${currentBot.name} הציע (פאליפיקו): ${finalQuantity} קוביות של ${state.currentBid.value}`;
+                } else if (state.currentBid.isPalafico && Math.random() > 0.75) {
+                    const minQuantity = (state.currentBid.quantity * 2) - 1;
+                    const newValue = state.currentBid.value < 6 ? state.currentBid.value + 1 : 2;
+                    
+                    state.currentBid = { quantity: minQuantity, value: newValue, playerIndex: state.currentPlayerIndex, isPalafico: false };
+                    state.bidQuantity = minQuantity;
+                    state.bidValue = newValue;
+                    state.isPalificoMode = false;
+                    state.message = `${currentBot.name} הציע: ${minQuantity} קוביות של ${newValue}`;
+                } else {
+                    let newQuantity = state.currentBid.quantity;
+                    let newValue = state.currentBid.value;
+                    
+                    if (newValue < 6) {
+                        newValue++;
+                    } else {
+                        newQuantity++;
+                        newValue = 2;
+                    }
+                    
+                    const botCount = state.currentBid.isPalafico 
+                        ? currentBot.dice.filter(d => d === newValue).length
+                        : currentBot.dice.filter(d => d === newValue || d === 1).length;
+                    
+                    if (botCount >= 2 && Math.random() > 0.5) {
+                        newQuantity = Math.max(newQuantity, botCount);
+                    }
+                    
+                    state.currentBid = { quantity: newQuantity, value: newValue, playerIndex: state.currentPlayerIndex, isPalafico: state.currentBid.isPalafico };
+                    state.bidQuantity = newQuantity;
+                    state.bidValue = newValue;
+                    state.isPalificoMode = state.currentBid.isPalafico;
+                    state.message = `${currentBot.name} הציע${state.currentBid.isPalafico ? ' (פאליפיקו)' : ''}: ${newQuantity} קוביות של ${newValue}`;
+                }
+                
+                state.currentPlayerIndex = getNextPlayerIndex(state.currentPlayerIndex);
+                render();
+                setTimeout(botTurnIfNeeded, 1500);
+            }
+        }
+
+        function callPerudo() {
+            state.showAllDice = true;
+            state.waitingForConfirm = true;
+            const allDice = state.players.filter(p => p.isAlive).flatMap(p => p.dice);
+            const actualCount = state.currentBid.isPalafico 
+                ? allDice.filter(d => d === state.currentBid.value).length
+                : allDice.filter(d => d === state.currentBid.value || d === 1).length;
+            
+            const isCorrect = actualCount < state.currentBid.quantity;
+            const challenger = state.players[state.currentPlayerIndex];
+            const bidder = state.players[state.currentBid.playerIndex];
+            
+            const loserIndex = isCorrect ? state.currentBid.playerIndex : state.currentPlayerIndex;
+            
+            let resultMessage = '';
+            if (isCorrect) {
+                resultMessage = `${challenger.name} צדק! יש רק ${actualCount} קוביות של ${state.currentBid.value}${state.currentBid.isPalafico ? ' (פאליפיקו - ללא תוכים)' : ' (כולל תוכים)'}. ${bidder.name} מאבד קובייה!`;
+            } else {
+                resultMessage = `${challenger.name} טעה! יש ${actualCount} קוביות של ${state.currentBid.value}${state.currentBid.isPalafico ? ' (פאליפיקו - ללא תוכים)' : ' (כולל תוכים)'}. ${challenger.name} מאבד קובייה!`;
+            }
+            
+            state.perudoResult = {
+                message: resultMessage,
+                loserIndex: loserIndex,
+                actualCount: actualCount
+            };
+            state.message = resultMessage;
+            render();
+        }
+
+        function callSpotOn() {
+            state.showAllDice = true;
+            state.waitingForConfirm = true;
+            const allDice = state.players.filter(p => p.isAlive).flatMap(p => p.dice);
+            const actualCount = state.currentBid.isPalafico 
+                ? allDice.filter(d => d === state.currentBid.value).length
+                : allDice.filter(d => d === state.currentBid.value || d === 1).length;
+            
+            const isExact = actualCount === state.currentBid.quantity;
+            const caller = state.players[state.currentPlayerIndex];
+            
+            let resultMessage = '';
+            let loserIndices = [];
+            
+            if (isExact) {
+                resultMessage = `🎯 ${caller.name} צדק! יש בדיוק ${actualCount} קוביות של ${state.currentBid.value}${state.currentBid.isPalafico ? ' (פאליפיקו)' : ''}! כל השחקנים האחרים מאבדים קובייה!`;
+                loserIndices = state.players.map((_, idx) => idx).filter(idx => idx !== state.currentPlayerIndex && state.players[idx].isAlive);
+            } else {
+                resultMessage = `❌ ${caller.name} טעה! יש ${actualCount} קוביות של ${state.currentBid.value}, לא ${state.currentBid.quantity}. ${caller.name} מאבד קובייה!`;
+                loserIndices = [state.currentPlayerIndex];
+            }
+            
+            state.perudoResult = {
+                message: resultMessage,
+                loserIndex: loserIndices,
+                actualCount: actualCount,
+                isSpotOn: true,
+                isExact: isExact
+            };
+            state.message = resultMessage;
+            render();
+        }
+
+        function confirmResult() {
+            if (!state.perudoResult) return;
+            
+            const newPlayers = [...state.players];
+            const loserIndices = Array.isArray(state.perudoResult.loserIndex) ? state.perudoResult.loserIndex : [state.perudoResult.loserIndex];
+            
+            loserIndices.forEach(idx => {
+                const loser = state.players[idx];
+                newPlayers[idx] = {
+                    ...loser,
+                    diceCount: loser.diceCount - 1,
+                    dice: loser.diceCount > 1 ? rollDice(loser.diceCount - 1) : [],
+                    isAlive: loser.diceCount > 1
+                };
+            });
+            
+            state.players = newPlayers;
+            state.waitingForConfirm = false;
+            state.perudoResult = null;
+            
+            checkGameOver(state.currentPlayerIndex);
+        }
+
+        function checkGameOver(lastLoserIndex) {
+            const alivePlayers = state.players.filter(p => p.isAlive);
+            
+            if (alivePlayers.length === 1) {
+                state.gameState = 'gameOver';
+                state.message = `${alivePlayers[0].name} ניצח!`;
+                render();
+            } else if (!state.players[0].isAlive) {
+                state.gameState = 'gameOver';
+                state.message = 'הפסדת! נשארת בלי קוביות';
+                render();
+            } else {
+                startNewRound(lastLoserIndex);
+            }
+        }
+
+        function startNewRound(starterIndex) {
+            state.round++;
+            
+            const newPlayers = state.players.map(p => ({
+                ...p,
+                dice: p.isAlive ? rollDice(p.diceCount) : []
+            }));
+            
+            state.players = newPlayers;
+            state.currentBid = null;
+            state.bidQuantity = 1;
+            state.bidValue = 2;
+            state.currentPlayerIndex = starterIndex;
+            state.showAllDice = false;
+            state.waitingForConfirm = false;
+            state.perudoResult = null;
+            state.isPalificoMode = false;
+            
+            if (state.players[starterIndex].isBot) {
+                state.message = `${state.players[starterIndex].name} מתחיל את הסיבוב`;
+            } else {
+                state.message = 'סיבוב חדש! התור שלך';
+            }
+            
+            render();
+            setTimeout(botTurnIfNeeded, 1500);
+        }
+
+        function render() {
+            const app = document.getElementById('app');
+            
+            if (state.gameState === 'menu') {
+                app.innerHTML = renderMenu();
+            } else if (state.gameState === 'gameOver') {
+                app.innerHTML = renderGameOver();
+            } else {
+                app.innerHTML = renderGame();
+            }
+        }
+
+        function renderMenu() {
+            return `
+                <div class="min-h-screen bg-gradient-to-br from-amber-900 via-orange-800 to-red-900 flex items-center justify-center p-4">
+                    <div class="bg-gradient-to-br from-amber-50 to-orange-100 rounded-3xl shadow-2xl p-8 max-w-2xl w-full border-4 border-amber-600">
+                        <div class="text-center mb-8">
+                            <div class="flex justify-center gap-2 mb-4">
+                                <span class="text-6xl">☕</span>
+                                <span class="text-6xl">🎲</span>
+                            </div>
+                            <h1 class="text-5xl font-bold text-amber-900 mb-2">פרודו</h1>
+                            <p class="text-amber-800 text-xl">Liar's Dice</p>
+                        </div>
+
+                        <div class="bg-white rounded-2xl p-6 mb-6 border-2 border-amber-300">
+                            <h2 class="text-2xl font-bold text-amber-900 mb-4 flex items-center gap-2">
+                                🧠 חוקי המשחק
+                            </h2>
+                            <ul class="space-y-2 text-amber-900">
+                                <li class="flex items-start gap-2">
+                                    <span class="text-xl">🎲</span>
+                                    <span>כל שחקן מתחיל עם 5 קוביות מתחת לכוס</span>
+                                </li>
+                                <li class="flex items-start gap-2">
+                                    <span class="text-xl">⭐</span>
+                                    <span>🦜 (1) הוא ג'וקר - נחשב ככל מספר!</span>
+                                </li>
+                                <li class="flex items-start gap-2">
+                                    <span class="text-xl">🎯</span>
+                                    <span>הצע הצעה רגילה (עם תוכים) או "פאליפיקו" (בלי תוכים)</span>
+                                </li>
+                                <li class="flex items-start gap-2">
+                                    <span class="text-xl">🔄</span>
+                                    <span>מעבר לפאליפיקו: חצי מהכמות (מעגלים למעלה). חזרה לרגיל: כפול 2 פחות 1</span>
+                                </li>
+                                <li class="flex items-start gap-2">
+                                    <span class="text-xl">🎭</span>
+                                    <span>קרא "פרודו" אם אתה חושב שההצעה מוגזמת</span>
+                                </li>
+                                <li class="flex items-start gap-2">
+                                    <span class="text-xl">🎯</span>
+                                    <span>קרא "בול!" אם אתה חושב שההצעה נכונה בדיוק - כל השאר מפסידים!</span>
+                                </li>
+                                <li class="flex items-start gap-2">
+                                    <span class="text-xl">💀</span>
+                                    <span>מי שטעה מאבד קובייה. אחרון ששורד מנצח!</span>
+                                </li>
+                            </ul>
+                        </div>
+
+                        <div class="space-y-4 mb-6">
+                            <div>
+                                <label class="block text-amber-900 font-bold mb-2 flex items-center gap-2">
+                                    👥 כמה בוטים?
+                                </label>
+                                <div class="grid grid-cols-4 gap-2">
+                                    ${[2, 3, 4, 5].map(num => `
+                                        <button onclick="state.numBots = ${num}; render();" 
+                                            class="py-3 px-4 rounded-xl font-bold transition ${state.numBots === num ? 'bg-amber-600 text-white' : 'bg-white text-amber-900 hover:bg-amber-100'}">
+                                            ${num}
+                                        </button>
+                                    `).join('')}
+                                </div>
+                            </div>
+
+                            <div>
+                                <label class="block text-amber-900 font-bold mb-2">רמת קושי:</label>
+                                <div class="space-y-2">
+                                    <button onclick="startGame('easy', ${state.numBots})" 
+                                        class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-6 rounded-xl transition transform hover:scale-105 shadow-lg">
+                                        🌱 קל
+                                    </button>
+                                    <button onclick="startGame('medium', ${state.numBots})" 
+                                        class="w-full bg-yellow-600 hover:bg-yellow-700 text-white font-bold py-3 px-6 rounded-xl transition transform hover:scale-105 shadow-lg">
+                                        ⚡ בינוני
+                                    </button>
+                                    <button onclick="startGame('hard', ${state.numBots})" 
+                                        class="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-6 rounded-xl transition transform hover:scale-105 shadow-lg">
+                                        🔥 קשה
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderGameOver() {
+            const playerWon = state.players[0].isAlive;
+            const winner = state.players.find(p => p.isAlive);
+            
+            return `
+                <div class="min-h-screen bg-gradient-to-br from-amber-900 via-orange-800 to-red-900 flex items-center justify-center p-4">
+                    <div class="bg-gradient-to-br from-amber-50 to-orange-100 rounded-3xl shadow-2xl p-8 max-w-2xl w-full border-4 border-amber-600">
+                        <div class="text-center mb-8">
+                            <div class="text-8xl mb-4">${playerWon ? '🏆' : '💀'}</div>
+                            <h1 class="text-4xl font-bold text-amber-900 mb-2">
+                                ${playerWon ? '🎉 ניצחת!' : '💀 משחק נגמר'}
+                            </h1>
+                            <p class="text-amber-800 text-xl mb-4">
+                                ${winner?.name} ניצח את המשחק!
+                            </p>
+                            <p class="text-amber-700">סיבובים ששיחקת: ${state.round}</p>
+                        </div>
+
+                        <div class="grid grid-cols-3 gap-3 mb-8">
+                            ${state.players.map(player => {
+                                const color = getPlayerColor(player.id);
+                                return `
+                                    <div class="bg-white rounded-xl p-4 text-center border-2 border-${color}-300">
+                                        <p class="text-${color}-900 font-bold text-sm mb-2">${player.name}</p>
+                                        <p class="text-2xl font-bold text-${color}-600">
+                                            ${player.isAlive ? '👑' : '💀'}
+                                        </p>
+                                        <p class="text-xs text-amber-700 mt-1">
+                                            ${player.isAlive ? `${player.diceCount} קוביות` : 'הודח'}
+                                        </p>
+                                    </div>
+                                `;
+                            }).join('')}
+                        </div>
+
+                        <button onclick="state.gameState='menu'; render();" 
+                            class="w-full bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-700 hover:to-orange-700 text-white font-bold py-4 px-6 rounded-xl transition transform hover:scale-105 shadow-lg">
+                            שחק שוב
+                        </button>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderGame() {
+            const currentPlayer = state.players[state.currentPlayerIndex];
+            const humanPlayer = state.players[0];
+            
+            return `
+                <div class="min-h-screen bg-gradient-to-br from-amber-900 via-orange-800 to-red-900 p-4">
+                    <div class="max-w-6xl mx-auto">
+                        ${renderHeader()}
+                        ${renderMessage()}
+                        ${renderPlayerDice(humanPlayer)}
+                        ${renderBotsDice()}
+                        ${currentPlayer?.id === 'player' && !state.showAllDice ? renderControls() : ''}
+                        ${state.waitingForConfirm ? renderConfirmModal() : ''}
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderHeader() {
+            return `
+                <div class="bg-gradient-to-br from-amber-50 to-orange-100 rounded-2xl shadow-xl p-6 mb-6 border-4 border-amber-600">
+                    <div class="text-center mb-4">
+                        <p class="text-2xl font-bold text-amber-900">סיבוב ${state.round}</p>
+                        <p class="text-amber-800 mt-2">תור: <span class="font-bold">${state.players[state.currentPlayerIndex]?.name}</span></p>
+                    </div>
+                    
+                    <div class="grid grid-cols-3 gap-3">
+                        ${state.players.map(player => {
+                            const color = getPlayerColor(player.id);
+                            const isCurrent = player.id === state.players[state.currentPlayerIndex]?.id;
+                            return `
+                                <div class="bg-white rounded-xl p-3 text-center border-2 ${isCurrent ? `border-${color}-500 ring-2 ring-${color}-300` : `border-${color}-200`} ${!player.isAlive ? 'opacity-50' : ''}">
+                                    <p class="text-${color}-900 font-bold text-sm mb-1">${player.name}</p>
+                                    <div class="flex justify-center gap-1">
+                                        ${Array.from({length: player.diceCount}, () => '☕').join('')}
+                                    </div>
+                                </div>
+                            `;
+                        }).join('')}
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderMessage() {
+            return `
+                <div class="bg-amber-100 rounded-xl p-4 mb-6 text-center border-2 border-amber-400">
+                    <p class="text-lg font-bold text-amber-900 flex items-center justify-center gap-2">
+                        ⚠️ ${state.message}
+                    </p>
+                </div>
+            `;
+        }
+
+        function renderPlayerDice(player) {
+            return `
+                <div class="bg-gradient-to-br from-blue-100 to-blue-200 rounded-2xl shadow-xl p-6 mb-6 border-4 border-blue-400">
+                    <h3 class="text-xl font-bold text-blue-900 mb-4 text-center flex items-center justify-center gap-2">
+                        ☕ הקוביות שלך
+                    </h3>
+                    <div class="flex justify-center gap-4 flex-wrap">
+                        ${player.dice.map(die => `
+                            <div class="transform transition hover:scale-110">
+                                ${renderDice(die)}
+                            </div>
+                        `).join('')}
+                    </div>
+                    ${player.dice.some(d => d === 1) ? '<p class="text-center text-yellow-700 font-bold mt-3 text-lg">🦜 יש לך תוכים (ג\'וקרים)!</p>' : ''}
+                </div>
+            `;
+        }
+
+        function renderBotsDice() {
+            return `
+                <div class="grid grid-cols-2 gap-4 mb-6">
+                    ${state.players.slice(1).map(player => {
+                        const color = getPlayerColor(player.id);
+                        return `
+                            <div class="bg-gradient-to-br from-${color}-100 to-${color}-200 rounded-2xl shadow-xl p-4 border-4 border-${color}-400">
+                                <h3 class="text-lg font-bold text-${color}-900 mb-3 text-center flex items-center justify-center gap-2">
+                                    ☕ ${player.name}
+                                </h3>
+                                <div class="flex justify-center gap-2 flex-wrap">
+                                    ${state.showAllDice ? 
+                                        player.dice.map(die => `
+                                            <div class="transform transition hover:scale-110">
+                                                ${renderDice(die, 'small')}
+                                            </div>
+                                        `).join('') :
+                                        Array.from({length: player.diceCount}, () => `
+                                            <div class="bg-gradient-to-br from-${color}-800 to-${color}-900 rounded-lg p-2 shadow border-2 border-${color}-600">
+                                                <div class="w-10 h-10 flex items-center justify-center text-2xl text-${color}-200">☕</div>
+                                            </div>
+                                        `).join('')
+                                    }
+                                </div>
+                                ${state.showAllDice && player.dice.some(d => d === 1) ? '<p class="text-center text-yellow-700 font-bold mt-2 text-xs">🦜 תוכים!</p>' : ''}
+                            </div>
+                        `;
+                    }).join('')}
+                </div>
+            `;
+        }
+
+        function renderControls() {
+            return `
+                <div class="bg-gradient-to-br from-amber-50 to-orange-100 rounded-2xl shadow-xl p-6 border-4 border-amber-600">
+                    <h3 class="text-xl font-bold text-amber-900 mb-4 text-center">מה ההמרה שלך?</h3>
+                    
+                    ${state.currentBid ? `
+                        <div class="bg-amber-200 rounded-xl p-3 mb-4 text-center border-2 border-amber-400">
+                            <p class="text-amber-900">
+                                ההצעה הנוכחית${state.currentBid.isPalafico ? ' (פאליפיקו - ללא תוכים 🦜)' : ''}: <span class="font-bold">${state.currentBid.quantity} קוביות של ${state.currentBid.value}</span>
+                                <br />
+                                <span class="text-sm">מאת: ${state.players[state.currentBid.playerIndex]?.name}</span>
+                            </p>
+                            ${state.currentBid.isPalafico ? `
+                                <p class="text-xs text-red-700 mt-1">
+                                    לחזור לרגיל: לפחות ${(state.currentBid.quantity * 2) - 1} קוביות
+                                </p>
+                            ` : `
+                                <p class="text-xs text-purple-700 mt-1">
+                                    לעבור לפאליפיקו: עד ${Math.ceil(state.currentBid.quantity / 2)} קוביות
+                                </p>
+                            `}
+                        </div>
+                    ` : ''}
+
+                    <div class="grid grid-cols-2 gap-4 mb-4">
+                        <div>
+                            <label class="block text-amber-900 font-bold mb-2">כמות:</label>
+                            <input type="number" min="1" value="${state.bidQuantity}" 
+                                oninput="state.bidQuantity = parseInt(this.value) || 1"
+                                class="w-full px-4 py-3 rounded-xl border-2 border-amber-300 text-2xl font-bold text-center focus:border-amber-500 focus:outline-none" />
+                        </div>
+                        <div>
+                            <label class="block text-amber-900 font-bold mb-2">ערך:</label>
+                            <select onchange="state.bidValue = parseInt(this.value)" 
+                                class="w-full px-4 py-3 rounded-xl border-2 border-amber-300 text-2xl font-bold text-center focus:border-amber-500 focus:outline-none">
+                                <option value="2" ${state.bidValue === 2 ? 'selected' : ''}>2</option>
+                                <option value="3" ${state.bidValue === 3 ? 'selected' : ''}>3</option>
+                                <option value="4" ${state.bidValue === 4 ? 'selected' : ''}>4</option>
+                                <option value="5" ${state.bidValue === 5 ? 'selected' : ''}>5</option>
+                                <option value="6" ${state.bidValue === 6 ? 'selected' : ''}>6</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="mb-4 flex items-center justify-center gap-3 bg-purple-100 rounded-xl p-3 border-2 border-purple-300">
+                        <label class="flex items-center gap-2 cursor-pointer">
+                            <input type="checkbox" ${state.isPalificoMode ? 'checked' : ''}
+                                onchange="state.isPalificoMode = this.checked; render();"
+                                class="w-5 h-5 cursor-pointer" />
+                            <span class="text-purple-900 font-bold">מצב פאליפיקו (ללא תוכים 🦜)</span>
+                        </label>
+                    </div>
+
+                    <div class="grid grid-cols-3 gap-3">
+                        <button onclick="makeBid()" 
+                            class="bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white font-bold py-4 px-4 rounded-xl transition transform hover:scale-105 shadow-lg">
+                            🎲 הצע
+                        </button>
+                        <button onclick="callSpotOn()" ${!state.currentBid ? 'disabled' : ''}
+                            class="bg-gradient-to-r from-yellow-600 to-yellow-700 hover:from-yellow-700 hover:to-yellow-800 text-white font-bold py-4 px-4 rounded-xl transition transform hover:scale-105 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed">
+                            🎯 בול!
+                        </button>
+                        <button onclick="callPerudo()" ${!state.currentBid ? 'disabled' : ''}
+                            class="bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white font-bold py-4 px-4 rounded-xl transition transform hover:scale-105 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed">
+                            🎭 פרודו!
+                        </button>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderConfirmModal() {
+            return `
+                <div class="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center p-4 z-50">
+                    <div class="bg-gradient-to-br from-amber-50 to-orange-100 rounded-3xl shadow-2xl p-8 max-w-2xl w-full border-4 border-amber-600 animate-pulse">
+                        <div class="text-center mb-6">
+                            <h2 class="text-3xl font-bold text-amber-900 mb-4">🎭 תוצאות הפרודו!</h2>
+                            <div class="bg-white rounded-2xl p-6 border-2 border-amber-400">
+                                <p class="text-xl text-amber-900 mb-4">${state.perudoResult?.message}</p>
+                                <div class="text-4xl font-bold text-red-700">
+                                    ${state.perudoResult?.actualCount} קוביות בפועל
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <button onclick="confirmResult()" 
+                            class="w-full bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white font-bold py-4 px-6 rounded-xl transition transform hover:scale-105 shadow-lg text-xl">
+                            ✅ אישור והמשך
+                        </button>
+                    </div>
+                </div>
+            `;
+        }
+
+        // Initialize
+        render();
+    </script>
+</body>
+</html>
