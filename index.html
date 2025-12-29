@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>אודות | חשן טייטלבאום</title>
+    <title>אודות | חושן טייטלבאום</title>
     <style>
         /* עיצוב כללי */
         body {
@@ -45,11 +45,6 @@
             color: #2c3e50;
         }
 
-        .subtitle {
-            color: #7f8c8d;
-            font-size: 1.1em;
-        }
-
         /* תוכן העמוד */
         .content {
             padding: 20px 0;
@@ -78,20 +73,45 @@
             font-weight: bold;
         }
 
-        /* כפתור ליצירת קשר */
-        .contact-btn {
+        /* אזור כפתורים */
+        .button-group {
+            text-align: center;
+            margin-top: 30px;
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+
+        .btn {
             display: inline-block;
-            margin-top: 20px;
-            padding: 10px 25px;
-            background-color: #007bff;
-            color: white;
+            padding: 12px 25px;
             text-decoration: none;
             border-radius: 5px;
-            transition: background 0.3s;
+            font-weight: bold;
+            transition: transform 0.2s, background 0.3s;
+        }
+
+        .btn:active {
+            transform: scale(0.95);
+        }
+
+        .contact-btn {
+            background-color: #007bff;
+            color: white;
         }
 
         .contact-btn:hover {
             background-color: #0056b3;
+        }
+
+        .prudo-btn {
+            background-color: #28a745; /* צבע ירוק לדף המוצרים */
+            color: white;
+        }
+
+        .prudo-btn:hover {
+            background-color: #218838;
         }
 
         /* התאמה לנייד */
@@ -100,6 +120,9 @@
                 margin: 20px;
                 padding: 15px;
             }
+            .button-group {
+                flex-direction: column;
+            }
         }
     </style>
 </head>
@@ -107,18 +130,18 @@
 
 <div class="container">
     <header class="profile-header">
-        <img src="https://via.placeholder.com/150" alt="התמונה שלי" class="profile-img">
-        <h1>שלום, אני חשן טייטלבאום</h1>
+        <img src="https://via.placeholder.com/150" alt="חושן טייטלבאום" class="profile-img">
+        <h1>שלום, אני חושן טייטלבאום</h1>
     </header>
 
     <main class="content">
         <section>
             <h2>קצת עלי</h2>
             <p>
-                אני מלמד יצירת אתרים בעזרת AI, ומוכר מוצרית שהדפסתי במדפסת תלת המימד שלי
+                אני מלמד יצירת אתרים בעזרת AI, ומוכר מוצרים שהדפסתי במדפסת תלת המימד שלי.
             </p>
             <p>
-                אני מאמין שהבעיות הכי מורכבות דורשות פתרונות מותאמות אישית, ולכן נהנה לעזור ללקוחות שלי לבנות את האתרים שהכי מתאימים להם ולעצב עבורם פתרונות בתלת מימד.
+                אני מאמין שהבעיות הכי מורכבות דורשות פתרונות מותאמים אישית, ולכן נהנה לעזור ללקוחות שלי לבנות את האתרים שהכי מתאימים להם ולעצב עבורם פתרונות בתלת מימד.
             </p>
         </section>
 
@@ -132,8 +155,10 @@
         </section>
     </main>
 
-    <footer style="text-align: center;">
-        <a href="mailto:ht1234567890abc@gmail.com" class="contact-btn">דברו איתי</a>
+    <footer class="button-group">
+        <a href="https://jaivnkl.github.io/prudo/" class="btn prudo-btn">לצפייה במוצרי Prudo</a>
+        
+        <a href="mailto:ht1234567890abc@gmail.com" class="btn contact-btn">שלחו לי מייל</a>
     </footer>
 </div>
 
